@@ -7,11 +7,15 @@ import { DeployFundMe } from "./../script/DeployFundMe.s.sol";
 
 contract FundMeTest is Test {
   FundMe fundMe;
+  address USER = makeAddr("user");
+  uint256 constant START_BALANCE = 30 ether;
+  uint256 constant AMOUNT_TO_FUND = 5 ether;
 
   function setUp() external {
     DeployFundMe deployFundMe = new DeployFundMe();
     fundMe = deployFundMe.run();
-    // fundMe = (new DeployFundMe()).run();
+    // https://book.getfoundry.sh/cheatcodes/deal
+    vm.deal(USER, START_BALANCE);
   }
 
   function testMinimumDollarIs5() public view {
@@ -26,5 +30,38 @@ contract FundMeTest is Test {
   function testVersionIsAccurate() public view {
     uint256 version = fundMe.getVersion();
     assertEq(version, 4);
+  }
+
+  // TODO: This test is not working as expected.
+  // It's supposed to fail without the `vm.expectRevert()`
+  function testFailsWithoutEnoughEth() public {
+    // https://book.getfoundry.sh/cheatcodes/prank
+    vm.prank(USER);
+    // vm.expectRevert(); // this means that next line will revert
+    fundMe.fund{value: 0 ether}();
+  }
+
+  function testPassWithEnoughEth() public {
+    vm.prank(USER);
+    fundMe.fund{value: AMOUNT_TO_FUND}();
+
+    uint256 amountFounded = fundMe.getAmountFunded(USER);
+    assertEq(amountFounded, AMOUNT_TO_FUND);
+  }
+
+  function testAddFunderToFunders() public {
+    vm.prank(USER);
+    fundMe.fund{value: AMOUNT_TO_FUND}();
+
+    address funder = fundMe.getFunder(0);
+    assertEq(funder, USER);
+  }
+
+  function testOnlyOwnerCanWithdraw() public {
+    vm.startPrank(USER);
+    fundMe.fund{value: AMOUNT_TO_FUND}();
+
+    vm.expectRevert();
+    fundMe.withdraw();
   }
 }
