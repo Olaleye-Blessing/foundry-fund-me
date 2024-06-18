@@ -64,3 +64,11 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
+## Summary
+
+Pass a fork-url when dealing with function that deals with external running contrat:
+
+```bash
+forge test --fork-url $RPC_URL
+```
