@@ -30,8 +30,7 @@ contract FundMeTest is Test {
   }
 
   function testOwnerIsMsgSender() public view {
-    // assertEq(address(this), fundMe.i_owner());
-    assertEq(msg.sender, fundMe.i_owner());
+    assertEq(msg.sender, fundMe.getOwner());
   }
 
   function testVersionIsAccurate() public view {
@@ -61,5 +60,43 @@ contract FundMeTest is Test {
   function testOnlyOwnerCanWithdraw() public funded {
     vm.expectRevert();
     fundMe.withdraw();
+  }
+
+  function testWithdrawWithASingleFounder() public funded {
+    address owner = fundMe.getOwner();
+    address fundMeContract = address(fundMe);
+    uint256 startingOwnerBalance = owner.balance;
+    uint256 startingContractBalance = fundMeContract.balance;
+
+    vm.prank(owner);
+    fundMe.withdraw();
+
+    uint256 endingOwnerBalance = owner.balance;
+    uint256 endingContractBalance = fundMeContract.balance;
+
+    assertEq(endingContractBalance, 0);
+    assertEq(startingContractBalance + startingOwnerBalance, endingOwnerBalance);
+  }
+
+  function testWithdrawFromMultipleFounders() public {
+    // uint256 can't be casted into an address
+    uint160 numOfFunders = 10;
+    uint160 startingFunderIndex = 2;
+
+    for (uint160 i = startingFunderIndex; i < numOfFunders; i++) {
+      hoax(address(i), AMOUNT_TO_FUND);
+      fundMe.fund{value: AMOUNT_TO_FUND}();
+    }
+
+    address owner = fundMe.getOwner();
+    address fundMeContract = address(fundMe);
+    uint256 startingOwnerBalance = owner.balance;
+    uint256 startingContractBalance = fundMeContract.balance;
+
+    vm.prank(owner);
+    fundMe.withdraw();
+
+    assertEq(fundMeContract.balance, 0);
+    assertEq(startingContractBalance + startingOwnerBalance, owner.balance);
   }
 }
