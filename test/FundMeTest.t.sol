@@ -18,6 +18,13 @@ contract FundMeTest is Test {
     vm.deal(USER, START_BALANCE);
   }
 
+  modifier funded() {
+    vm.startPrank(USER);
+    fundMe.fund{value: AMOUNT_TO_FUND}();
+    vm.stopPrank();
+    _;
+  }
+
   function testMinimumDollarIs5() public view {
     assertEq(fundMe.MINIMUM_USD(), 5e18);
   }
@@ -41,26 +48,17 @@ contract FundMeTest is Test {
     fundMe.fund{value: 0 ether}();
   }
 
-  function testPassWithEnoughEth() public {
-    vm.prank(USER);
-    fundMe.fund{value: AMOUNT_TO_FUND}();
-
+  function testPassWithEnoughEth() public funded {
     uint256 amountFounded = fundMe.getAmountFunded(USER);
     assertEq(amountFounded, AMOUNT_TO_FUND);
   }
 
-  function testAddFunderToFunders() public {
-    vm.prank(USER);
-    fundMe.fund{value: AMOUNT_TO_FUND}();
-
+  function testAddFunderToFunders() public funded {
     address funder = fundMe.getFunder(0);
     assertEq(funder, USER);
   }
 
-  function testOnlyOwnerCanWithdraw() public {
-    vm.startPrank(USER);
-    fundMe.fund{value: AMOUNT_TO_FUND}();
-
+  function testOnlyOwnerCanWithdraw() public funded {
     vm.expectRevert();
     fundMe.withdraw();
   }
