@@ -2,8 +2,12 @@
 pragma solidity ^0.8.18;
 
 import { Script } from "forge-std/Script.sol";
+import { MockV3Aggregator } from "./../test/mocks/MockV3Aggregator.sol";
 
-contract HelperConfig {
+contract HelperConfig is Script {
+  uint8 private constant DECIMALS = 8;
+  int256 private constant INITIAL_PRICE = 2000e8;
+
   struct NetworkConfig {
     address priceFeed; // ETH/USD price feed
   }
@@ -41,7 +45,13 @@ contract HelperConfig {
     return config;
   }
 
-  function getAnvilEthConfig() public pure returns (NetworkConfig memory) {
-    // TODO
+  function getAnvilEthConfig() public returns (NetworkConfig memory) {
+    vm.startBroadcast();
+    MockV3Aggregator priceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
+    vm.stopBroadcast();
+
+    NetworkConfig memory config = NetworkConfig({priceFeed: address(priceFeed)});
+
+    return config;
   }
 }
