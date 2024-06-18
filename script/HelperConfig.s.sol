@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { Script } from "forge-std/Script.sol";
+import { Script, console } from "forge-std/Script.sol";
 import { MockV3Aggregator } from "./../test/mocks/MockV3Aggregator.sol";
 
 contract HelperConfig is Script {
@@ -46,6 +46,11 @@ contract HelperConfig is Script {
   }
 
   function getAnvilEthConfig() public returns (NetworkConfig memory) {
+    // Contracts always have adress 0x00 initially.
+    if(activeNetworkConfig.priceFeed != address(0)) {
+      return activeNetworkConfig;
+    }
+
     vm.startBroadcast();
     MockV3Aggregator priceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
     vm.stopBroadcast();
