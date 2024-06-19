@@ -72,3 +72,9 @@ Pass a fork-url when dealing with function that deals with external running cont
 ```bash
 forge test --fork-url $RPC_URL
 ```
+
+Get a snapshot of what each function costs through your tests:
+
+```bash
+forge snapshot
+```

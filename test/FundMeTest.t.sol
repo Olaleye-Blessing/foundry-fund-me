@@ -99,4 +99,26 @@ contract FundMeTest is Test {
     assertEq(fundMeContract.balance, 0);
     assertEq(startingContractBalance + startingOwnerBalance, owner.balance);
   }
+
+  function testWithdrawFromMultipleFoundersCheaper() public {
+    // uint256 can't be casted into an address
+    uint160 numOfFunders = 10;
+    uint160 startingFunderIndex = 2;
+
+    for (uint160 i = startingFunderIndex; i < numOfFunders; i++) {
+      hoax(address(i), AMOUNT_TO_FUND);
+      fundMe.fund{value: AMOUNT_TO_FUND}();
+    }
+
+    address owner = fundMe.getOwner();
+    address fundMeContract = address(fundMe);
+    uint256 startingOwnerBalance = owner.balance;
+    uint256 startingContractBalance = fundMeContract.balance;
+
+    vm.prank(owner);
+    fundMe.cheaperWithdraw();
+
+    assertEq(fundMeContract.balance, 0);
+    assertEq(startingContractBalance + startingOwnerBalance, owner.balance);
+  }
 }
